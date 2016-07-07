@@ -109,7 +109,11 @@ namespace OpenCvSharp
                     sbyte* buf = NativeMethods.core_FileStorage_elname(ptr);
                     if (buf == null)
                         return null;
+#if !NETCORE
                     return new string(buf);
+#else
+                    return new string((char*)buf);
+#endif
                 }
             }
         }
@@ -145,9 +149,9 @@ namespace OpenCvSharp
             }
         }
 
-        #endregion
+#endregion
 
-        #region Methods
+#region Methods
 
         /// <summary>
         /// operator that performs PCA. The previously stored data, if any, is released
@@ -275,7 +279,7 @@ namespace OpenCvSharp
             return buf.ToString();
         }
 
-        #endregion
+#endregion
 
 #if LANG_JP
     /// <summary>

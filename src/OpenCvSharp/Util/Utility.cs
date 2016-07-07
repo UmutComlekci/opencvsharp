@@ -155,7 +155,11 @@ namespace OpenCvSharp.Util
         {
             Type t = typeof(T);
             // OpenCVのオブジェクトであることを期待してポインタからのオブジェクト生成を試みる.
+#if !NETCORE
             ConstructorInfo info = t.GetConstructor(new Type[] { typeof(IntPtr), typeof(bool) });
+#else
+            ConstructorInfo info = t.GetTypeInfo().GetConstructor(new Type[] { typeof(IntPtr), typeof(bool) });
+#endif
             if (info != null)
             {
                 return (T)info.Invoke(new object[] { p, false });
@@ -216,7 +220,11 @@ namespace OpenCvSharp.Util
         {
             while (test != typeof(object))
             {
+#if !NETCORE
                 if (test.IsGenericType)
+#else
+                if (test.GetTypeInfo().IsGenericType)
+#endif
                 {
                     Type g = test.GetGenericTypeDefinition();
                     if (target == g)
@@ -224,7 +232,11 @@ namespace OpenCvSharp.Util
                         return true;
                     }
                 }
+#if !NETCORE
                 test = test.BaseType;
+#else
+                test = test.GetTypeInfo().BaseType;
+#endif
             }
             return false;
         }
@@ -236,7 +248,11 @@ namespace OpenCvSharp.Util
         /// <returns></returns>
         public static int SizeOf(Type t)
         {
+#if !NETCORE
             if (t.IsValueType)
+#else
+            if (t.GetTypeInfo().IsValueType)
+#endif
             {
                 return Marshal.SizeOf(t);
             }
@@ -256,6 +272,6 @@ namespace OpenCvSharp.Util
                 return IntPtr.Size;
             }
         }
-        #endregion
+#endregion
     }
 }

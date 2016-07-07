@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace OpenCvSharp.Util
@@ -88,8 +89,11 @@ namespace OpenCvSharp.Util
             {
                 throw new PlatformNotSupportedException("This method is for only Windows");
             }
-
+#if !NETCORE
             if (!typeof(T).IsSubclassOf(typeof(Delegate)))
+#else
+            if (!typeof(T).GetTypeInfo().IsSubclassOf(typeof(Delegate)))
+#endif
                 throw new OpenCvSharpException("The type argument must be Delegate.");
             if (string.IsNullOrEmpty(dllName))
                 throw new ArgumentNullException("dllName");

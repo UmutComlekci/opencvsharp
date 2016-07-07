@@ -108,12 +108,16 @@ namespace OpenCvSharp
                 unsafe
                 {
                     sbyte* p = NativeMethods.vector_string_elemAt(ptr, i);
+#if !NETCORE
                     ret[i] = new string(p);
+#else
+                    ret[i] = new string((char*)p);
+#endif
                 }
             }
             return ret;
         }
 
-        #endregion
+#endregion
     }
 }

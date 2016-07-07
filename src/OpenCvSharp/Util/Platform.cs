@@ -31,10 +31,15 @@ namespace OpenCvSharp.Util
 
         static Platform()
         {
+#if !NETCORE
             int p = (int)Environment.OSVersion.Platform;
             OS = ((p == 4) || (p == 6) || (p == 128)) ? OS.Unix : OS.Windows;
 
             Runtime = (Type.GetType("Mono.Runtime") == null) ? Runtime.Mono : Runtime.DotNet;
+#else
+            OS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? OS.Windows : OS.Unix;
+            Runtime = Runtime.DotNet;
+#endif
         }
     }
 }

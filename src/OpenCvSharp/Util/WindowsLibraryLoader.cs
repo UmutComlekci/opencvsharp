@@ -95,8 +95,12 @@ namespace OpenCvSharp.Util
         /// <returns></returns>
         public bool IsCurrentPlatformSupported()
         {
+#if !NETCORE
             return Environment.OSVersion.Platform == PlatformID.Win32NT ||
                 Environment.OSVersion.Platform == PlatformID.Win32Windows;
+#else
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
         }
 
         /// <summary>
@@ -135,19 +139,25 @@ namespace OpenCvSharp.Util
                         if (dllHandle != IntPtr.Zero) return;
                     }
 
+#if !NETCORE
                     // Try loading from executing assembly domain
                     var executingAssembly = Assembly.GetExecutingAssembly();
                     baseDirectory = Path.GetDirectoryName(executingAssembly.Location);
                     dllHandle = LoadLibraryInternal(dllName, baseDirectory, processArch);
                     if (dllHandle != IntPtr.Zero) return;
-
+#endif
                     // Fallback to current app domain
-                    baseDirectory = Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory);
+                    baseDirectory = Path.GetFullPath(GetAppBase());
                     dllHandle = LoadLibraryInternal(dllName, baseDirectory, processArch);
                     if (dllHandle != IntPtr.Zero) return;
 
                     // Finally try the working directory
+#if !NETCORE
                     baseDirectory = Path.GetFullPath(Environment.CurrentDirectory);
+#else
+                    baseDirectory = Path.GetFullPath(Directory.GetCurrentDirectory());
+
+                    #endif
                     dllHandle = LoadLibraryInternal(dllName, baseDirectory, processArch);
                     if (dllHandle != IntPtr.Zero) return;
 
@@ -176,6 +186,15 @@ namespace OpenCvSharp.Util
             {
                 Debug.WriteLine(e.Message);
             }
+        }
+
+        private static string GetAppBase()
+        {
+#if !NETCORE
+            return AppDomain.CurrentDomain.BaseDirectory;
+#else
+            return AppContext.BaseDirectory;
+#endif
         }
 
         /// <summary>
@@ -287,15 +306,19 @@ namespace OpenCvSharp.Util
         {
             if (!String.IsNullOrEmpty(fileName))
             {
+#if !NETCORE
                 PlatformID platformId = Environment.OSVersion.Platform;
 
                 if ((platformId == PlatformID.Win32S) ||
                     (platformId == PlatformID.Win32Windows) ||
                     (platformId == PlatformID.Win32NT) ||
                     (platformId == PlatformID.WinCE))
+#else
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+#endif
                 {
                     if (!fileName.EndsWith(DllFileExtension,
-                            StringComparison.OrdinalIgnoreCase))
+                                StringComparison.OrdinalIgnoreCase))
                     {
                         return fileName + DllFileExtension;
                     }
@@ -352,7 +375,12 @@ namespace OpenCvSharp.Util
         }
 
         [DllImport("kernel32", EntryPoint = "LoadLibrary", CallingConvention = CallingConvention.Winapi,
-            SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+            SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true
+#if !NETCORE
+            , CharSet = CharSet.Auto,)]
+#else
+            )]
+#endif
         private static extern IntPtr Win32LoadLibrary(string dllPath);
     }
 }

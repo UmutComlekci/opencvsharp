@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
+#if !NETCORE
 using System.Security.Permissions;
+#endif
 using OpenCvSharp.Util;
+using System.IO;
 
 // ReSharper disable InconsistentNaming
 #pragma warning disable 1591
@@ -42,11 +45,13 @@ namespace OpenCvSharp
 
         public const string DllFfmpegX86 = "opencv_ffmpeg" + Version;
         public const string DllFfmpegX64 = DllFfmpegX86 + "_64";
-        
+
         /// <summary>
         /// Static constructor
         /// </summary>
+#if !NETCORE
         [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
+#endif
         static NativeMethods()
         {
             LoadLibraries(WindowsLibraryLoader.Instance.AdditionalPaths);
@@ -66,8 +71,13 @@ namespace OpenCvSharp
 
             string[] ap = EnumerableEx.ToArray(additionalPaths);
             List<string> runtimePaths = new List<string> (ap);
+#if !NETCORE
             runtimePaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.System));
-            
+#else
+            string winDir = Environment.GetEnvironmentVariable("WINDIR");
+            runtimePaths.Add(Path.Combine(winDir, "System32"));
+#endif
+
             foreach (string dll in RuntimeDllNames)
             {
                 WindowsLibraryLoader.Instance.LoadLibrary(dll, runtimePaths);
@@ -154,10 +164,14 @@ namespace OpenCvSharp
         /// <returns></returns>
         public static bool IsUnix()
         {
+#if !NETCORE
             var p = Environment.OSVersion.Platform;
             return (p == PlatformID.Unix ||
                     p == PlatformID.MacOSX ||
                     (int)p == 128);
+#else
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+#endif
         }
 
         /// <summary>
@@ -169,7 +183,7 @@ namespace OpenCvSharp
             return (Type.GetType("Mono.Runtime") != null);
         }
 
-        #region Error redirection
+#region Error redirection
         /// <summary>
         /// Custom error handler to be thrown by OpenCV
         /// </summary>
@@ -202,6 +216,6 @@ namespace OpenCvSharp
         /// Default error handler
         /// </summary>
         public static CvErrorCallback ErrorHandlerDefault;
-        #endregion
+#endregion
     }
 }

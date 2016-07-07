@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace OpenCvSharp.Util
 {
@@ -178,7 +179,11 @@ namespace OpenCvSharp.Util
         {
             if (enumerable == null)
                 throw new ArgumentNullException("enumerable");
+#if !NETCORE
             if (typeof (TSource).IsValueType)
+#else
+            if (typeof(TSource).GetTypeInfo().IsValueType)
+#endif
                 return false;
 
             foreach (TSource elem in enumerable)
